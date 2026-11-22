@@ -33,3 +33,8 @@ RUN chown -R www-data:www-data /usr/src/wordpress/wp-content
 # Media goes to the trash like posts do, so an agent's "delete" is a trash it can't empty (guard.php).
 # Code can't be changed from the dashboard: it would vanish on the next deploy, so the image is where it changes.
 ENV WORDPRESS_CONFIG_EXTRA="define( 'MEDIA_TRASH', true ); define( 'DISALLOW_FILE_MODS', true );"
+
+# The uploads volume is mounted owned by root; hand it to www-data, then run the official entrypoint.
+COPY docker/entrypoint.sh /usr/local/bin/agent-ready-entrypoint.sh
+ENTRYPOINT ["agent-ready-entrypoint.sh"]
+CMD ["apache2-foreground"]
