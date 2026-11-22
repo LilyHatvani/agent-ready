@@ -38,6 +38,7 @@ $check( 'Propose can upload media', current_user_can( 'upload_files' ) );
 $check( 'Propose cannot publish', ! current_user_can( 'publish_posts' ) );
 $check( 'Propose cannot manage options', ! current_user_can( 'manage_options' ) );
 $check( 'Propose cannot change roles', ! current_user_can( 'promote_users' ) );
+$check( 'an agent cannot set its own level', false === Agents\set_level( $agent_id, 'full' ) && 'propose' === Agents\level_of( $agent_id ) );
 
 // ---- Full: no administration either, even as Editor or as Administrator set by hand. ------------------------------
 wp_set_current_user( $owner_id );

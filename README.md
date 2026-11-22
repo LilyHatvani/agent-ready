@@ -18,7 +18,7 @@ trash; posts raw scripts. Every edit is a WordPress revision you can restore. A 
 the agent can still publish when the time comes. WordPress's own roles enforce the levels; this plugin adds the lines no
 role should cross ([0001](docs/decisions/0001-levels-are-roles.md)).
 
-**Status: pre-alpha, M0.** The plugin's guard and levels work and are tested against WordPress 7.1.5 (24 checks, which
+**Status: pre-alpha, M0.** The plugin's guard and levels work and are tested against WordPress 7.1.5 (25 checks, which
 fail when the guard is switched off). The MCP Adapter is in the image. What writes posts over MCP, and how claude.ai
 signs in, is the next step: [docs/ROADMAP.md](docs/ROADMAP.md).
 

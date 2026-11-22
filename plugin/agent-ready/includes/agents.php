@@ -60,13 +60,14 @@ function level_of( int $user_id ): string {
 }
 
 /**
- * Sets an agent's level by setting its role. Only the owner calls this (admin.php checks the capability and nonce).
+ * Sets an agent's level by setting its role. Only the owner calls this (admin.php checks the capability and nonce);
+ * an agent calling it is refused here too, so no future caller can let an agent change a level.
  *
  * @param int    $user_id Agent user id.
  * @param string $level   One of LEVEL_ROLES' keys.
  */
 function set_level( int $user_id, string $level ): bool {
-	if ( ! array_key_exists( $level, LEVEL_ROLES ) || ! is_agent( $user_id ) ) {
+	if ( current_is_agent() || ! array_key_exists( $level, LEVEL_ROLES ) || ! is_agent( $user_id ) ) {
 		return false;
 	}
 	$user = get_userdata( $user_id );

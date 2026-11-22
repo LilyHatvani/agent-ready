@@ -6,7 +6,7 @@ Each milestone is **not done** until every box below it is verified against the 
 
 - [x] Charter, vision, decisions 0001–0005.
 - [x] Agent Ready plugin: agent users, Users → Agents, levels as roles, the guard.
-- [x] `tests/integration.php` passes against WordPress 7.1.5 (24 checks); with the guard off, its 10 checks fail.
+- [x] `tests/integration.php` passes against WordPress 7.1.5 (25 checks); with the guard off, its 10 checks fail.
 - [x] The must-use loader keeps the MCP Adapter on; the owner and a Propose agent open an MCP session; an Off agent
       is refused (checked on WordPress 7.1.5 with SQLite).
 - [x] Dockerfile (pinned image, adapter by checksum), compose, CI.

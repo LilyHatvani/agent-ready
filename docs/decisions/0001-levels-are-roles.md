@@ -36,5 +36,5 @@ publish, change and trash any post without asking, and that revisions and the tr
 
 ## Verified
 
-`tests/integration.php`, against WordPress 7.1.5: 24 checks pass; with the guard switched off, the 10 that test the
+`tests/integration.php`, against WordPress 7.1.5: 25 checks pass; with the guard switched off, the 10 that test the
 guard fail (2026-11-22).
