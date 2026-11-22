@@ -2,7 +2,7 @@
 
 Each milestone is **not done** until every box below it is verified against the running product.
 
-## M0 — repository set up (2026-11-22)
+## M0 — repository set up ✅ (2026-11-22)
 
 - [x] Charter, vision, decisions 0001–0005.
 - [x] Agent Ready plugin: agent users, Users → Agents, levels as roles, the guard.
@@ -10,7 +10,7 @@ Each milestone is **not done** until every box below it is verified against the 
 - [x] The must-use loader keeps the MCP Adapter on; the owner and a Propose agent open an MCP session; an Off agent
       is refused (checked on WordPress 7.1.5 with SQLite).
 - [x] Dockerfile (pinned image, adapter by checksum), compose, CI.
-- [ ] CI green on the first push (the Docker jobs haven't run yet: no Docker daemon where M0 was written).
+- [x] CI green on the first push: lint, the guard checks on real WordPress 7.1.5, and the image installing with its MCP route (2026-11-22, run 1).
 
 ## M1 — your agent writes, you publish
 
