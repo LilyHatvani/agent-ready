@@ -1,0 +1,18 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Shell scripts and git hooks must stay LF — a CRLF shebang breaks them on POSIX shells
+# and inside container images (`exec ...: no such file or directory`).
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+# Binary assets: never diffed or normalised as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff2 binary
+*.woff binary
+*.ttf binary

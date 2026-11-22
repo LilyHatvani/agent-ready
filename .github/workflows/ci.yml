@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: php lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: find plugin docker tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  integration:
+    name: guard checks on real WordPress
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: tests/run.sh
+
+  image:
+    name: image builds and serves
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: docker compose up -d --build --wait
+      - name: WordPress installs, and the MCP route exists
+        run: |
+          for i in $(seq 1 60); do
+            curl -fsS -o /dev/null localhost:8080/wp-admin/install.php && break
+            sleep 2
+          done
+          # An uninstalled WordPress redirects every page to the installer, so install it the way a person would.
+          curl -fsS -o /dev/null 'localhost:8080/wp-admin/install.php?step=2' \
+            --data-urlencode 'weblog_title=CI' --data-urlencode 'user_name=owner' \
+            --data-urlencode 'admin_password=ci-only-password-1' --data-urlencode 'admin_password2=ci-only-password-1' \
+            --data-urlencode 'pw_weak=1' --data-urlencode 'admin_email=owner@example.invalid'
+          curl -fsS 'localhost:8080/?rest_route=/' | grep -q '"mcp"' || { docker compose logs wordpress; exit 1; }
+      - if: always()
+        run: docker compose down -v
