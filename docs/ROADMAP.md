@@ -25,7 +25,9 @@ Each milestone is **not done** until every box below it is verified against the 
 - [ ] claude.ai signs in over OAuth as the agent user ([0003](decisions/0003-sign-in.md)).
 
 **Invariants:**
-- [ ] A claude.ai grant approved by an administrator still acts as the agent, at the agent's level.
+- [ ] OAuth consent mints a token only for an agent user: an administrator clicking Allow is refused, with a reason
+      that says to approve as the agent (audit condition b, [0002](decisions/0002-template-not-fork.md)).
+- [ ] The abilities plugin ships only on 0002's conditions a–f, each checked.
 - [ ] Every guard check still passes with the abilities plugin active.
 - [ ] A Propose agent's publish attempt over MCP is refused with a reason naming the level.
 
