@@ -10,6 +10,7 @@ and `linux/arm64`: the pinned WordPress image, the MCP Adapter by checksum, Agen
 | Publish a GitHub release `v1.2.3`, or push the tag (`git push origin v1.2.3`) | `:1.2.3`, `:1.2`, `:1`, `:latest` |
 | A pre-release version, `v1.3.0-rc.1` | `:1.3.0-rc.1` only |
 | Run *release* by hand with **push** on | `:edge`, from the branch you ran it on |
+| Run *release* by hand with **push** on and a **version** (`0.1.0`) | the same tags as a release of that version |
 | Run *release* by hand with **push** off | nothing: both platforms build, as a check |
 
 After a push, a second job runs the pushed image with only its database, finishes WordPress's install and checks the
