@@ -40,6 +40,11 @@ Each milestone is **not done** until every box below it is verified against the 
 
 ## M2 — the template goes public
 
-- [ ] Image published on release; the Railway template deploys it with MySQL and an uploads volume.
+- [x] Image published on release, for amd64 and arm64, smoke-tested after the push
+      ([self-host/release.md](self-host/release.md), 2026-11-23).
+- [ ] The Railway template deploys it with MySQL and an uploads volume (the recipe:
+      [self-host/railway-template.md](self-host/railway-template.md); the owner builds it once the image is public).
+- [x] Sign-ins survive a redeploy: the salts live in the database, not in a per-container `wp-config.php` (CI checks
+      it by recreating the container; [0004](decisions/0004-what-lives-on-the-volume.md)).
 - [ ] A fresh deploy, filling nothing in, installs and connects.
 - [ ] Repository public; README carries the Deploy on Railway button.

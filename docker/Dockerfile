@@ -34,6 +34,20 @@ RUN chown -R www-data:www-data /usr/src/wordpress/wp-content
 # Code can't be changed from the dashboard: it would vanish on the next deploy, so the image is where it changes.
 ENV WORDPRESS_CONFIG_EXTRA="define( 'MEDIA_TRASH', true ); define( 'DISALLOW_FILE_MODS', true );"
 
+# Salts that survive a deploy, with nothing to configure. Only uploads are on a volume, so every deploy starts from a fresh
+# wp-config.php, and the official entrypoint fills any salt it isn't given with a new random one: everyone would be signed
+# out, and every nonce and approval link broken, on each deploy. Given WordPress's own placeholder instead, wp_salt()
+# generates each salt once and keeps it in the database (pluggable.php), so they last as long as the site. Setting
+# WORDPRESS_AUTH_KEY and friends to real values still overrides this (docs/decisions/0004-what-lives-on-the-volume.md).
+ENV WORDPRESS_AUTH_KEY="put your unique phrase here" \
+    WORDPRESS_SECURE_AUTH_KEY="put your unique phrase here" \
+    WORDPRESS_LOGGED_IN_KEY="put your unique phrase here" \
+    WORDPRESS_NONCE_KEY="put your unique phrase here" \
+    WORDPRESS_AUTH_SALT="put your unique phrase here" \
+    WORDPRESS_SECURE_AUTH_SALT="put your unique phrase here" \
+    WORDPRESS_LOGGED_IN_SALT="put your unique phrase here" \
+    WORDPRESS_NONCE_SALT="put your unique phrase here"
+
 # The uploads volume is mounted owned by root; hand it to www-data, then run the official entrypoint.
 COPY docker/entrypoint.sh /usr/local/bin/agent-ready-entrypoint.sh
 ENTRYPOINT ["agent-ready-entrypoint.sh"]

@@ -1,0 +1,106 @@
+name: release
+
+# The image the Railway template and self-hosters run: ghcr.io/<owner>/agent-ready, for linux/amd64 and linux/arm64.
+# A published GitHub release (tag v1.2.3) pushes :1.2.3, :1.2, :1 and :latest; a pre-release pushes only its own tag.
+# Run it by hand to build both platforms without pushing (the check before a first release), or with push on to publish
+# :edge from the branch. docs/self-host/release.md.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      push:
+        description: Push the built image as :edge (off builds both platforms and pushes nothing)
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: build and publish the image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUSH: ${{ github.event_name == 'release' || inputs.push }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # The base image is multi-platform; only the adapter's download and unzip run emulated on arm64.
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - if: env.PUSH == 'true'
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/agent-ready
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ !github.event.release.prerelease }}
+            type=semver,pattern={{major}},enable=${{ !github.event.release.prerelease }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=raw,value=edge,enable=${{ github.event_name == 'workflow_dispatch' }}
+          labels: |
+            org.opencontainers.image.title=Agent Ready
+            org.opencontainers.image.description=WordPress with an MCP door, where an AI agent works with the reach you chose.
+            org.opencontainers.image.licenses=GPL-2.0-or-later
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  smoke:
+    name: the published image installs and serves its MCP route
+    needs: image
+    if: github.event_name == 'release' || inputs.push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      db:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: wordpress
+          MARIADB_USER: wordpress
+          MARIADB_PASSWORD: wordpress
+          MARIADB_RANDOM_ROOT_PASSWORD: "1"
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - name: run the image as a template deploy would, with only its database
+        env:
+          TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || 'edge' }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/agent-ready:${TAG#v}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker run -d --name wp --network host -e WORDPRESS_DB_HOST=127.0.0.1 -e WORDPRESS_DB_NAME=wordpress \
+            -e WORDPRESS_DB_USER=wordpress -e WORDPRESS_DB_PASSWORD=wordpress "$image"
+          for i in $(seq 1 60); do curl -fsS -o /dev/null localhost/wp-admin/install.php && break; sleep 2; done
+          curl -fsS -o /dev/null 'localhost/wp-admin/install.php?step=2' --data-urlencode 'weblog_title=Smoke' \
+            --data-urlencode 'user_name=owner' --data-urlencode 'admin_password=smoke-only-password-1' \
+            --data-urlencode 'admin_password2=smoke-only-password-1' --data-urlencode 'pw_weak=1' \
+            --data-urlencode 'admin_email=owner@example.invalid'
+          curl -fsS 'localhost/?rest_route=/' | grep -q '"mcp"' || { docker logs wp | tail -40; exit 1; }

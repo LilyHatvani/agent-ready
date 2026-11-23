@@ -49,5 +49,14 @@ jobs:
             --data-urlencode 'admin_password=ci-only-password-1' --data-urlencode 'admin_password2=ci-only-password-1' \
             --data-urlencode 'pw_weak=1' --data-urlencode 'admin_email=owner@example.invalid'
           curl -fsS 'localhost:8080/?rest_route=/' | grep -q '"mcp"' || { docker compose logs wordpress; exit 1; }
+      - name: a sign-in survives a redeploy (salts kept in the database, not made anew per container)
+        run: |
+          curl -fsS -o /dev/null -c jar -b 'wordpress_test_cookie=WP%20Cookie%20check' localhost:8080/wp-login.php \
+            --data-urlencode 'log=owner' --data-urlencode 'pwd=ci-only-password-1' --data-urlencode 'testcookie=1'
+          [ "$(curl -s -o /dev/null -w '%{http_code}' -b jar localhost:8080/wp-admin/)" = 200 ] || { echo "not signed in"; exit 1; }
+          docker compose up -d --force-recreate --wait wordpress
+          for i in $(seq 1 30); do curl -fsS -o /dev/null localhost:8080/wp-login.php && break; sleep 2; done
+          code="$(curl -s -o /dev/null -w '%{http_code}' -b jar localhost:8080/wp-admin/)"
+          [ "$code" = 200 ] || { echo "signed out by the redeploy: HTTP $code"; docker compose logs wordpress | tail -30; exit 1; }
       - if: always()
         run: docker compose down -v
