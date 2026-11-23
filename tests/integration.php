@@ -27,7 +27,7 @@ $owner_id = (int) $owner->ID;
 
 // ---- An agent starts at Propose. --------------------------------------------------------------------------------
 wp_set_current_user( $owner_id );
-$agent_id = Agents\create( 'claude' );
+$agent_id = Agents\create( 'claude-' . wp_generate_password( 6, false ) );
 $check( 'an agent is created', is_int( $agent_id ) );
 $check( 'a new agent is at Propose (Contributor)', 'propose' === Agents\level_of( $agent_id ) );
 

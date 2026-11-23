@@ -20,19 +20,23 @@ Each milestone is **not done** until every box below it is verified against the 
 - [ ] As a site owner, Claude creates a draft with a picture and submits it; I publish it from the dashboard.
 
 **Behaviour:**
-- [ ] Post abilities exist over MCP ([0002](decisions/0002-template-not-fork.md)): create draft, edit, submit for
-      review, publish, schedule, trash, upload, list, read.
-- [ ] claude.ai signs in over OAuth as the agent user ([0003](decisions/0003-sign-in.md)).
+- [x] Post abilities exist over MCP ([0002](decisions/0002-template-not-fork.md)): create draft, edit, submit for
+      review, publish, schedule, trash, upload (an upload link), list, read; each exercised over MCP at its level
+      (`tests/connect.php`, 2026-11-23).
+- [ ] claude.ai signs in over OAuth as the agent user ([0003](decisions/0003-sign-in.md)). Built and checked with real
+      tokens from the token endpoint over HTTP (`tests/oauth-http.sh`); claude.ai itself waits for a public deploy.
 
 **Invariants:**
-- [ ] OAuth consent mints a token only for an agent user: an administrator clicking Allow is refused, with a reason
-      that says to approve as the agent (audit condition b, [0002](decisions/0002-template-not-fork.md)).
-- [ ] The abilities plugin ships only on 0002's conditions a–f, each checked.
-- [ ] Every guard check still passes with the abilities plugin active.
-- [ ] A Propose agent's publish attempt over MCP is refused with a reason naming the level.
+- [x] OAuth consent mints a token only for an agent user: an administrator clicking Allow is refused, with a reason
+      that says to approve as the agent (audit condition b, [0002](decisions/0002-template-not-fork.md)); a person's
+      token that got through some other way runs nothing.
+- [ ] The abilities plugin ships only on 0002's conditions a–f, each checked. b–f built and checked; **a** (not before
+      2026-12-02, re-checked for a 2.17.x security release then) keeps it out of the image until that date.
+- [x] Every guard check still passes with the abilities plugin active (`tests/run.sh` runs them both ways).
+- [x] A Propose agent's publish attempt over MCP is refused with a reason naming the level.
 
 **Edges:**
-- [ ] Revoking the grant or setting Off ends the agent's next call.
+- [x] Revoking the grant or setting Off ends the agent's next call (over HTTP with a real token; Off names the level).
 
 ## M2 — the template goes public
 

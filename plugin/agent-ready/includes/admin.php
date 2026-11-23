@@ -11,6 +11,7 @@
 namespace AgentReady\Admin;
 
 use AgentReady\Agents;
+use AgentReady\Connect;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -73,6 +74,7 @@ function render(): void {
 					<tr>
 						<th><?php esc_html_e( 'Agent', 'agent-ready' ); ?></th>
 						<th><?php esc_html_e( 'Level', 'agent-ready' ); ?></th>
+						<th><?php esc_html_e( 'Connect an AI as this agent', 'agent-ready' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -90,6 +92,16 @@ function render(): void {
 								<?php endforeach; ?>
 							</select>
 						</td>
+						<td>
+							<?php $agent_ready_why = Connect\approve_as_unavailable( (int) $agent->ID ); ?>
+							<?php // The approve form can't nest in this one: the button submits the separate form below by its id. ?>
+							<button type="submit" class="button" form="agent-ready-approve-<?php echo esc_attr( (string) $agent->ID ); ?>" <?php disabled( null !== $agent_ready_why ); ?>>
+								<?php echo esc_html( sprintf( /* translators: %s: agent name. */ __( 'Approve a connection as %s', 'agent-ready' ), $agent->user_login ) ); ?>
+							</button>
+							<?php if ( null !== $agent_ready_why ) : ?>
+								<p class="description"><?php echo esc_html( $agent_ready_why ); ?></p>
+							<?php endif; ?>
+						</td>
 					</tr>
 				<?php endforeach; ?>
 					<tr>
@@ -98,6 +110,7 @@ function render(): void {
 							<input id="agent-ready-new" type="text" name="new_agent" placeholder="claude" />
 						</td>
 						<td><?php echo esc_html( $labels[ Agents\DEFAULT_LEVEL ] ); ?></td>
+						<td></td>
 					</tr>
 				</tbody>
 			</table>
@@ -111,6 +124,19 @@ function render(): void {
 
 			<?php submit_button( __( 'Save', 'agent-ready' ) ); ?>
 		</form>
+
+		<?php foreach ( Agents\all() as $agent ) : ?>
+			<form id="agent-ready-approve-<?php echo esc_attr( (string) $agent->ID ); ?>" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="<?php echo esc_attr( Connect\ACTION ); ?>" />
+				<input type="hidden" name="agent" value="<?php echo esc_attr( (string) $agent->ID ); ?>" />
+				<?php // Not wp_nonce_field(): one per agent would repeat its element id on the page. ?>
+				<input type="hidden" name="_wpnonce" value="<?php echo esc_attr( wp_create_nonce( Connect\ACTION ) ); ?>" />
+			</form>
+		<?php endforeach; ?>
+
+		<h2><?php esc_html_e( 'Connecting', 'agent-ready' ); ?></h2>
+		<p><?php esc_html_e( 'claude.ai and other web clients connect over OAuth: choose "Approve a connection as" next to the agent, then add the address it shows as a custom connector. The approval must come from the agent, never from your own account, or the AI would act with your rights.', 'agent-ready' ); ?></p>
+		<p><?php esc_html_e( 'Claude Code and desktop clients can use an application password made on the agent\'s profile instead.', 'agent-ready' ); ?></p>
 	</div>
 	<?php
 }

@@ -15,4 +15,9 @@ switch to it and drop the dependency on that part.
 the owner approves while logged in as an administrator, the grant must still land on the agent, or the levels mean
 nothing. M1 checks this before anything ships.
 
+**Built (2026-11-23):** an administrator is refused at the consent screen, with the way on; in Users → Agents,
+"Approve a connection as" signs the owner's browser in as the agent for 15 minutes, reaching only the OAuth screens
+and ending when the consent is answered or the browser goes anywhere else. Any token that still reached a person runs
+nothing on the OAuth MCP server. `includes/connect.php`; checks in `tests/connect.php` and `tests/oauth-http.sh`.
+
 **Default if no answer:** as recommended.

@@ -1,6 +1,7 @@
 # 0002 — A template that assembles, not a fork; who writes the post abilities
 
-Status: **accepted** (not a fork) · **proposed** (bundle Enable Abilities for MCP, on the audit's conditions below)
+Status: **accepted** (not a fork) · **proposed** (bundle Enable Abilities for MCP, on the audit's conditions below) ·
+conditions b–f **built and checked** (2026-11-23); a waits until 2026-12-02, so the image doesn't carry it yet
 
 ## Not a fork
 
@@ -43,11 +44,14 @@ No telemetry, no role changes, no code execution outside the admin-only Code Sni
 | # | Condition | Who covers it |
 | --- | --- | --- |
 | a | Not before **2026-12-02** (14 days); re-check for a 2.17.x security release then | M1 gate |
-| b | Consent can only mint a token for an **agent** user | **Agent Ready: refuse consent for any non-agent user** (new guard line, M1, with its check) |
-| c | The legacy Bearer API key never generated, `ewpa_bearer_enabled` off | image default + docs |
-| d | ChatGPT DCR (`ewpa_oauth_connectors_enabled`) off unless wanted; review its callback allowlist if on | image default + docs |
+| b | Consent can only mint a token for an **agent** user | **built** (`includes/connect.php`): the consent screen and Allow refuse anyone but an agent, and the OAuth MCP server runs nothing for a person's token; the owner approves through a 15-minute sign-in as the agent. Checked in process and over HTTP with real tokens |
+| c | The legacy Bearer API key never generated, `ewpa_bearer_enabled` off | **built** (`includes/abilities.php`): the option reads off whatever is stored, so its Bearer authentication never hooks in; checked |
+| d | ChatGPT DCR (`ewpa_oauth_connectors_enabled`) off unless wanted; review its callback allowlist if on | the plugin's own default is off; a check pins it |
 | e | No unfiltered HTML for agents | **already in the guard** (`unfiltered_html` stripped; checked) |
-| f | `ewpa/upload-image` off, or nothing unauthenticated on 80/443/8080 in the Railway project's private network | image default: off; uploads go through the presigned upload link ability |
+| f | `ewpa/upload-image` off, or nothing unauthenticated on 80/443/8080 in the Railway project's private network | **built**: off by default (also when the plugin was there before Agent Ready, once); upload links on; checked |
+
+How it's installed: `tests/fetch-abilities.sh` takes the plugin from its git commit and its vendor from its own lock
+file, and checks all three commits. wordpress.org's zip isn't used, so what runs is what was read.
 
 **Decision (proposed):** bundle 2.17.1 (or a later version re-audited) once a–f hold. If (b) can't be enforced from
 outside the plugin, write our own abilities instead and take OAuth from the adapter when it releases it.

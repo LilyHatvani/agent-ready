@@ -20,6 +20,10 @@ define( 'AGENT_READY_VERSION', '0.1.0' );
 require_once __DIR__ . '/includes/agents.php';
 require_once __DIR__ . '/includes/guard.php';
 require_once __DIR__ . '/includes/admin.php';
+require_once __DIR__ . '/includes/connect.php';
+require_once __DIR__ . '/includes/abilities.php';
 
 AgentReady\Guard\register();
 AgentReady\Admin\register();
+AgentReady\Connect\register();
+AgentReady\Abilities\register();
