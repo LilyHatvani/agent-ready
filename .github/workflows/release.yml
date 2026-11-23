@@ -1,13 +1,17 @@
 name: release
 
 # The image the Railway template and self-hosters run: ghcr.io/<owner>/agent-ready, for linux/amd64 and linux/arm64.
-# A published GitHub release (tag v1.2.3) pushes :1.2.3, :1.2, :1 and :latest; a pre-release pushes only its own tag.
+# A published GitHub release or a pushed tag v1.2.3 pushes :1.2.3, :1.2, :1 and :latest; a pre-release version (v1.3.0-rc.1)
+# pushes only its own tag.
 # Run it by hand to build both platforms without pushing (the check before a first release), or with push on to publish
 # :edge from the branch. docs/self-host/release.md.
 
 on:
   release:
     types: [published]
+  # A pushed version tag releases too (git push origin v1.2.3), for when there's no GitHub release to publish.
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       push:
@@ -31,7 +35,7 @@ jobs:
       contents: read
       packages: write
     env:
-      PUSH: ${{ github.event_name == 'release' || inputs.push }}
+      PUSH: ${{ github.event_name != 'workflow_dispatch' || inputs.push }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       # The base image is multi-platform; only the adapter's download and unzip run emulated on arm64.
@@ -50,9 +54,9 @@ jobs:
           flavor: latest=false
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}},enable=${{ !github.event.release.prerelease }}
-            type=semver,pattern={{major}},enable=${{ !github.event.release.prerelease }}
-            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ !contains(github.ref_name, '-') }}
+            type=semver,pattern={{major}},enable=${{ !contains(github.ref_name, '-') }}
+            type=raw,value=latest,enable=${{ github.event_name != 'workflow_dispatch' && !contains(github.ref_name, '-') }}
             type=raw,value=edge,enable=${{ github.event_name == 'workflow_dispatch' }}
           labels: |
             org.opencontainers.image.title=Agent Ready
@@ -74,7 +78,7 @@ jobs:
   smoke:
     name: the published image installs and serves its MCP route
     needs: image
-    if: github.event_name == 'release' || inputs.push
+    if: github.event_name != 'workflow_dispatch' || inputs.push
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:
@@ -92,7 +96,7 @@ jobs:
     steps:
       - name: run the image as a template deploy would, with only its database
         env:
-          TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || 'edge' }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && 'edge' || github.ref_name }}
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/agent-ready:${TAG#v}"
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin

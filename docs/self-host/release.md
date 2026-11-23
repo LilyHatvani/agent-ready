@@ -7,8 +7,8 @@ and `linux/arm64`: the pinned WordPress image, the MCP Adapter by checksum, Agen
 
 | You do | The workflow pushes |
 | --- | --- |
-| Publish a GitHub release `v1.2.3` | `:1.2.3`, `:1.2`, `:1`, `:latest` |
-| Publish a pre-release `v1.3.0-rc.1` | `:1.3.0-rc.1` only |
+| Publish a GitHub release `v1.2.3`, or push the tag (`git push origin v1.2.3`) | `:1.2.3`, `:1.2`, `:1`, `:latest` |
+| A pre-release version, `v1.3.0-rc.1` | `:1.3.0-rc.1` only |
 | Run *release* by hand with **push** on | `:edge`, from the branch you ran it on |
 | Run *release* by hand with **push** off | nothing: both platforms build, as a check |
 
