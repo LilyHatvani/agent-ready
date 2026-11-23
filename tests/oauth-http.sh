@@ -15,6 +15,7 @@ has() { case "$1" in *"$2"*) echo 1 ;; *) echo 0 ;; esac; }
 lacks() { case "$1" in *"$2"*) echo 0 ;; *) echo 1 ;; esac; }
 step() { AR_STEP="$1" AR_AGENT="${AGENT:-}" AR_BASE="$BASE" $RUN_PHP "$STEP_FILE"; }
 
+step site
 eval "$(step seed | grep -E '^[A-Z_]+=')"
 
 token() {

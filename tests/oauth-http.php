@@ -1,7 +1,7 @@
 <?php
 /**
- * The WordPress side of tests/oauth-http.sh, one step per run (AR_STEP): sets the site up for HTTP and seeds what a
- * finished consent leaves (an auth code for an agent and one for the owner), or changes the agent between requests.
+ * The WordPress side of tests/oauth-http.sh, one step per run (AR_STEP): points the site at the test server (site),
+ * then seeds what a finished consent leaves (an auth code for an agent and one for the owner), or changes the agent between requests.
  * Prints shell assignments for the script to read. Run with `wp eval-file` or any loader of wp-load.php.
  *
  * @package AgentReady
@@ -13,12 +13,18 @@ $step  = getenv( 'AR_STEP' ) ?: 'seed';
 $owner = get_user_by( 'login', 'owner' );
 wp_set_current_user( $owner->ID );
 
-if ( 'seed' === $step ) {
+if ( 'site' === $step ) {
+	// Its own run: cookie names come from the site address (COOKIEHASH), fixed when WordPress loads, so the seed's
+	// cookies must be made in a later run that loads with this address.
 	$base = rtrim( (string) getenv( 'AR_BASE' ), '/' );
 	update_option( 'home', $base );
 	update_option( 'siteurl', $base );
 	update_option( 'permalink_structure', '/%postname%/' );
 	flush_rewrite_rules( false );
+	exit( 0 );
+}
+
+if ( 'seed' === $step ) {
 	$agent     = Agents\create( 'http-' . wp_generate_password( 6, false ) );
 	$verifier  = wp_generate_password( 50, false );
 	$challenge = rtrim( strtr( base64_encode( hash( 'sha256', $verifier, true ) ), '+/', '-_' ), '=' );
